@@ -1,6 +1,6 @@
 /* ===== ORDER SCRIPTS ===== */
 
-const API = 'http://localhost:3000';
+const API = 'https://smart-retail-backend-kvfj.onrender.com';
   function getCurrencySymbol() {
       if (!localStorage.getItem('currency_symbol')) {
         localStorage.setItem('currency_symbol', '₹');
