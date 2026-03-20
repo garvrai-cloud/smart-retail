@@ -1,6 +1,6 @@
 /* ===== SETTINGS SCRIPTS ===== */
 
-const API = 'http://localhost:3000';
+const API = 'https://smart-retail-backend-kvfj.onrender.com';
   const SETTINGS_KEY = 'smart_retail_settings';
 
   // ── Apply theme instantly ─────────────────────
