@@ -1,6 +1,6 @@
 /* ===== LOGIN SCRIPTS ===== */
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://smart-retail-backend-kvfj.onrender.com';
 
     // ── Hardcoded demo credentials (change these to yours) ──
     const VALID_EMAIL    = 'admin@smartretail.com';
