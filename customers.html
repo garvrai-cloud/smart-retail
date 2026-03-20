@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Customers - Smart Retail</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="customers.css" />
+</head>
+<body>
+  <script src="customers.js"></script>
+
+  <div class="sidebar">
+    <div class="sidebar-header"><h2>Smart Retail</h2></div>
+    <nav class="nav-menu">
+      <a href="dashboard_dynamic.html" class="nav-item"><span>📊</span><span>Dashboard</span></a>
+      <a href="products.html"          class="nav-item"><span>📦</span><span>Products</span></a>
+      <a href="orders.html"            class="nav-item"><span>🛒</span><span>Orders</span></a>
+      <a href="customers.html"         class="nav-item active"><span>👥</span><span>Customers</span></a>
+      <a href="automation.html"        class="nav-item"><span>🤖</span><span>Automation</span></a>
+      <a href="dashboard_analytics.html" class="nav-item"><span>📈</span><span>Analytics</span></a>
+      <a href="settings.html"          class="nav-item"><span>⚙️</span><span>Settings</span></a>
+      <a href="index.html"             class="nav-item"><span>🚪</span><span>Logout</span></a>
+    </nav>
+  </div>
+
+  <div class="main-content">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <h1>👥 Customers Management</h1>
+        <p id="cust-count">Loading customers...</p>
+      </div>
+      <div id="connection-status" class="connection-status status-disconnected">
+        <span class="status-dot" style="background:#ef4444"></span>
+        <span>Connecting...</span>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Customers</div>
+        <div class="stat-value c-blue"   id="s-total">—</div>
+        <div class="stat-sub">All registered</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">⭐ VIP</div>
+        <div class="stat-value c-yellow" id="s-vip">—</div>
+        <div class="stat-sub">High-value customers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🔵 Regular</div>
+        <div class="stat-value c-blue"   id="s-regular">—</div>
+        <div class="stat-sub">Returning customers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🟢 New</div>
+        <div class="stat-value c-green"  id="s-new">—</div>
+        <div class="stat-sub">Recently joined</div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search by name, email or phone..." oninput="applyFilters()" />
+      </div>
+      <select class="filter-select" id="type-filter" onchange="applyFilters()">
+        <option value="">All Types</option>
+        <option value="vip">⭐ VIP</option>
+        <option value="regular">🔵 Regular</option>
+        <option value="new">🟢 New</option>
+      </select>
+      <select class="filter-select" id="sort-select" onchange="applyFilters()">
+        <option value="spent_desc">Highest Spent</option>
+        <option value="spent_asc">Lowest Spent</option>
+        <option value="orders_desc">Most Orders</option>
+        <option value="name_asc">Name A→Z</option>
+        <option value="id_asc">ID 1→9</option>
+      </select>
+      <button class="btn-refresh" onclick="loadCustomers()">🔄 Refresh</button>
+    </div>
+
+    <!-- RESULTS INFO -->
+    <div class="results-info" id="results-info"></div>
+
+    <!-- CARDS GRID -->
+    <div class="customers-grid" id="customers-grid">
+      <div class="empty-state"><div class="icon">⏳</div><p>Loading customers...</p></div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination" id="pagination"></div>
+
+  </div>
+
+  <!-- CUSTOMER DETAIL MODAL -->
+  <div id="detailModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-avatar" id="m-avatar"></div>
+        <div>
+          <div class="modal-name" id="m-name"></div>
+          <div class="modal-email" id="m-email"></div>
+          <div id="m-badge" style="margin-top:6px"></div>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="section-title">📋 Customer Details</div>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="detail-label">Customer ID</div><div class="detail-value" id="m-id"></div></div>
+        <div class="detail-item"><div class="detail-label">Phone</div><div class="detail-value" id="m-phone"></div></div>
+        <div class="detail-item"><div class="detail-label">Total Spent</div><div class="detail-value c-green" id="m-spent"></div></div>
+        <div class="detail-item"><div class="detail-label">Total Orders</div><div class="detail-value c-blue" id="m-orders"></div></div>
+        <div class="detail-item"><div class="detail-label">Customer Type</div><div class="detail-value" id="m-type"></div></div>
+        <div class="detail-item"><div class="detail-label">Joined</div><div class="detail-value" id="m-joined"></div></div>
+      </div>
+
+      <div class="section-title">🛒 Recent Orders</div>
+      <div id="m-order-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000';
+    function getCurrencySymbol() {
+      if (!localStorage.getItem('currency_symbol')) {
+        localStorage.setItem('currency_symbol', '₹');
+        localStorage.setItem('currency_rate', '1');
+      }
+      // Fix wrong rate if it was previously set to 1 for INR
+      const sym = localStorage.getItem('currency_symbol') || '₹';
+      const rate = parseFloat(localStorage.getItem('currency_rate') || '1');
+      if (sym === '₹' && rate < 1) {
+        localStorage.setItem('currency_rate', '1');
+      }
+      return sym;
+    }
+    function getCurrencyRate() {
+      return parseFloat(localStorage.getItem('currency_rate') || '1');
+    }
+    function formatCurrency(amount) {
+      const sym  = getCurrencySymbol();
+      const rate = getCurrencyRate();
+      const val  = parseFloat(String(amount).replace(/[^0-9.]/g,'')) || 0;
+      const converted = val * rate;
+      return sym + converted.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+    }
+    let allCustomers = [];
+    let allOrders    = [];
+    let filtered     = [];
+    let currentPage  = 1;
+    const PAGE_SIZE  = 9;
+
+    function setConnected(ok) {
+      const el = document.getElementById('connection-status');
+      el.className = 'connection-status ' + (ok ? 'status-connected' : 'status-disconnected');
+      el.querySelector('.status-dot').style.background = ok ? '#22c55e' : '#ef4444';
+      el.querySelector('span:last-child').textContent  = ok ? 'Connected' : 'Disconnected';
+    }
+
+    async function loadCustomers() {
+      try {
+        const [cRes, oRes] = await Promise.all([
+          fetch(`${API_URL}/api/customers`),
+          fetch(`${API_URL}/api/orders`)
+        ]);
+        allCustomers = await cRes.json();
+        allOrders    = await oRes.json();
+        setConnected(true);
+        updateStats();
+        applyFilters();
+        document.getElementById('cust-count').textContent = `${allCustomers.length} total customers`;
+      } catch (e) {
+        setConnected(false);
+        document.getElementById('cust-count').textContent = 'Unable to load';
+        document.getElementById('customers-grid').innerHTML = `
+          <div class="no-backend">
+            <div class="icon">🔌</div>
+            <h3>Backend not connected</h3>
+            <p>Make sure backend is running:</p>
+            <code>npm start</code>
+            <button class="btn-refresh" style="margin-top:16px" onclick="loadCustomers()">🔄 Retry</button>
+          </div>`;
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('s-total').textContent   = allCustomers.length;
+      document.getElementById('s-vip').textContent     = allCustomers.filter(c => c.customer_type === 'vip').length;
+      document.getElementById('s-regular').textContent = allCustomers.filter(c => c.customer_type === 'regular').length;
+      document.getElementById('s-new').textContent     = allCustomers.filter(c => c.customer_type === 'new').length;
+    }
+
+    function applyFilters() {
+      const q    = document.getElementById('search-input').value.toLowerCase();
+      const type = document.getElementById('type-filter').value;
+      const sort = document.getElementById('sort-select').value;
+
+      filtered = allCustomers.filter(c => {
+        const matchQ    = !q || (c.name||'').toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q) || (c.phone||'').includes(q);
+        const matchType = !type || c.customer_type === type;
+        return matchQ && matchType;
+      });
+
+      filtered.sort((a,b) => {
+        if (sort === 'spent_desc')  return parseFloat(b.total_spent||0) - parseFloat(a.total_spent||0);
+        if (sort === 'spent_asc')   return parseFloat(a.total_spent||0) - parseFloat(b.total_spent||0);
+        if (sort === 'orders_desc') return (b.total_orders||0) - (a.total_orders||0);
+        if (sort === 'name_asc')    return (a.name||'').localeCompare(b.name||'');
+        if (sort === 'id_asc')      return a.customer_id - b.customer_id;
+        return 0;
+      });
+
+      currentPage = 1;
+      document.getElementById('results-info').textContent =
+        filtered.length ? `Showing ${filtered.length} of ${allCustomers.length} customers` : '';
+      renderCards();
+      renderPagination();
+    }
+
+    function avatarInitials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(' ');
+      return parts.length >= 2 ? parts[0][0] + parts[1][0] : parts[0][0];
+    }
+
+    function typeBadge(t) {
+      if (t === 'vip')     return `<span class="type-badge badge-vip">⭐ VIP</span>`;
+      if (t === 'regular') return `<span class="type-badge badge-regular">🔵 Regular</span>`;
+      return `<span class="type-badge badge-new">🟢 New</span>`;
+    }
+
+    function avatarClass(t) {
+      if (t === 'vip') return 'vip';
+      if (t === 'new') return 'new-c';
+      return '';
+    }
+
+    function customerOrders(id) {
+      return allOrders.filter(o => o.customer_id === id || String(o.customer_id) === String(id));
+    }
+
+    function renderCards() {
+      const grid  = document.getElementById('customers-grid');
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const page  = filtered.slice(start, start + PAGE_SIZE);
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><p>No customers match your search</p></div>`;
+        return;
+      }
+
+      grid.innerHTML = page.map(c => {
+        const orders  = customerOrders(c.customer_id);
+        const spent   = parseFloat(c.total_spent || 0).toFixed(2);
+        const sym_ = getCurrencySymbol();
+        const oCount  = c.total_orders || orders.length || 0;
+        const initials = avatarInitials(c.name);
+        const aClass   = avatarClass(c.customer_type);
+
+        return `
+          <div class="customer-card" onclick="openModal(${c.customer_id})">
+            <div class="card-top">
+              <div class="avatar ${aClass}">${initials}</div>
+              <div>
+                <div class="card-name">${c.name || '—'}</div>
+                <div class="card-email">${c.email || '—'}</div>
+                ${typeBadge(c.customer_type)}
+              </div>
+            </div>
+            <div class="card-phone">📞 ${c.phone || 'No phone'}</div>
+            <div class="card-stats">
+              <div class="card-stat">
+                <div class="cs-label">Total Spent</div>
+                <div class="cs-value c-green">${formatCurrency(spent)}</div>
+              </div>
+              <div class="card-stat">
+                <div class="cs-label">Orders</div>
+                <div class="cs-value c-blue">${oCount}</div>
+              </div>
+            </div>
+            <button class="btn-view">👁 View Profile</button>
+          </div>`;
+      }).join('');
+    }
+
+    function renderPagination() {
+      const total = Math.ceil(filtered.length / PAGE_SIZE);
+      const pg    = document.getElementById('pagination');
+      if (total <= 1) { pg.innerHTML = ''; return; }
+      let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>← Prev</button>`;
+      for (let i = 1; i <= total; i++) {
+        html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      }
+      html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>Next →</button>`;
+      pg.innerHTML = html;
+    }
+
+    function goPage(n) {
+      const total = Math.ceil(filtered.length / PAGE_SIZE);
+      if (n < 1 || n > total) return;
+      currentPage = n;
+      renderCards();
+      renderPagination();
+    }
+
+    function formatDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    }
+
+    function openModal(id) {
+      const c = allCustomers.find(x => x.customer_id === id || String(x.customer_id) === String(id));
+      if (!c) return;
+
+      const aClass = avatarClass(c.customer_type);
+      document.getElementById('m-avatar').className  = `modal-avatar ${aClass}`;
+      document.getElementById('m-avatar').textContent = avatarInitials(c.name);
+      document.getElementById('m-name').textContent   = c.name || '—';
+      document.getElementById('m-email').textContent  = c.email || '—';
+      document.getElementById('m-badge').innerHTML    = typeBadge(c.customer_type);
+      document.getElementById('m-id').textContent     = '#' + c.customer_id;
+      document.getElementById('m-phone').textContent  = c.phone || 'Not provided';
+      document.getElementById('m-spent').textContent  = formatCurrency(c.total_spent || 0);
+      document.getElementById('m-orders').textContent = c.total_orders || 0;
+      document.getElementById('m-type').textContent   = (c.customer_type || 'new').toUpperCase();
+      document.getElementById('m-joined').textContent = formatDate(c.created_at);
+
+      const orders = customerOrders(c.customer_id).slice(0, 5);
+      document.getElementById('m-order-list').innerHTML = orders.length
+        ? orders.map(o => `
+            <div class="order-row">
+              <div class="order-row-left">
+                <div class="order-row-id">#${o.order_id}</div>
+                <div class="order-row-date">${formatDate(o.order_date)} · ${o.status}</div>
+              </div>
+              <div class="order-row-amount">${formatCurrency(parseFloat(o.total_amount||0).toFixed(2))}</div>
+            </div>`).join('')
+        : '<div class="no-orders">No orders found for this customer</div>';
+
+      document.getElementById('detailModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').classList.remove('active');
+    }
+
+    document.getElementById('detailModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    loadCustomers();
+  </script>
+</body>
+</html>

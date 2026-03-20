@@ -1,0 +1,446 @@
+F<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Settings - Smart Retail</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header"><h2>Smart Retail</h2></div>
+  <nav class="nav-menu">
+    <a href="dashboard_dynamic.html" class="nav-item"><span>📊</span><span>Dashboard</span></a>
+    <a href="products.html"          class="nav-item"><span>📦</span><span>Products</span></a>
+    <a href="orders.html"            class="nav-item"><span>🛒</span><span>Orders</span></a>
+    <a href="customers.html"         class="nav-item"><span>👥</span><span>Customers</span></a>
+    <a href="automation.html"        class="nav-item"><span>🤖</span><span>Automation</span></a>
+    <a href="dashboard_analytics.html" class="nav-item"><span>📈</span><span>Analytics</span></a>
+    <a href="settings.html"          class="nav-item active"><span>⚙️</span><span>Settings</span></a>
+    <a href="index.html"             class="nav-item"><span>🚪</span><span>Logout</span></a>
+  </nav>
+</div>
+
+<div class="main-content">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1>⚙️ Settings</h1>
+      <p>Manage your account, notifications and system preferences</p>
+    </div>
+    <button class="btn-save-all" onclick="saveAll()">💾 Save All Changes</button>
+  </div>
+
+  <div class="settings-layout">
+
+    <!-- LEFT TABS -->
+    <div class="tabs">
+      <div class="tab-item active" onclick="switchTab('profile')"><span class="tab-icon">👤</span> Profile</div>
+      <div class="tab-item" onclick="switchTab('notifications')"><span class="tab-icon">🔔</span> Notifications</div>
+      <div class="tab-item" onclick="switchTab('appearance')"><span class="tab-icon">🎨</span> Appearance</div>
+      <div class="tab-item" onclick="switchTab('email')"><span class="tab-icon">📧</span> Email</div>
+      <div class="tab-item" onclick="switchTab('system')"><span class="tab-icon">🖥️</span> System</div>
+      <div class="tab-item" onclick="switchTab('danger')"><span class="tab-icon">⚠️</span> Danger Zone</div>
+    </div>
+
+    <!-- RIGHT CONTENT -->
+    <div>
+
+      <!-- PROFILE -->
+      <div id="tab-profile" class="section active">
+        <div class="card">
+          <div class="card-title">👤 Profile Information</div>
+          <div class="card-sub">Update your personal details and account info</div>
+
+          <div class="avatar-section">
+            <div class="avatar-big" id="profile-avatar">A</div>
+            <div class="avatar-info">
+              <h3 id="profile-display-name">Admin User</h3>
+              <p id="profile-display-email">admin@smartretail.com</p>
+              <button class="btn-change-avatar" onclick="changeAvatar()">📷 Change Photo</button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="p-name" placeholder="Your full name" />
+            </div>
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" id="p-username" placeholder="@username" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="p-email" placeholder="your@email.com" />
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" id="p-phone" placeholder="+91 9876543210" />
+            </div>
+          </div>
+          <div class="form-row single">
+            <div class="form-group">
+              <label>Role</label>
+              <input type="text" id="p-role" value="Store Administrator" readonly />
+            </div>
+          </div>
+          <div class="form-row single">
+            <div class="form-group">
+              <label>Bio</label>
+              <textarea id="p-bio" placeholder="Short description about yourself..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔐 Change Password</div>
+          <div class="card-sub">Keep your account secure with a strong password</div>
+          <div class="form-row single">
+            <div class="form-group">
+              <label>Current Password</label>
+              <input type="password" id="p-old-pass" placeholder="Enter current password" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>New Password</label>
+              <input type="password" id="p-new-pass" placeholder="Min 8 characters" />
+            </div>
+            <div class="form-group">
+              <label>Confirm Password</label>
+              <input type="password" id="p-confirm-pass" placeholder="Repeat new password" />
+            </div>
+          </div>
+          <div class="section-save">
+            <button class="btn-section-save" onclick="saveProfile()">💾 Save Profile</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div id="tab-notifications" class="section">
+        <div class="card">
+          <div class="card-title">🔔 Email Notifications</div>
+          <div class="card-sub">Choose which alerts you want to receive by email</div>
+
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <h4>🚨 Low Stock Alerts</h4>
+              <p>Get notified when products fall below reorder level</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="n-lowstock" checked /><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <h4>🛒 New Order Placed</h4>
+              <p>Email when a customer places a new order</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="n-neworder" checked /><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <h4>👤 New Customer Signup</h4>
+              <p>Alert when a new user registers on the platform</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="n-signup" checked /><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <h4>📊 Daily Sales Report</h4>
+              <p>Receive daily summary of sales every morning at 8AM</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="n-daily" /><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <h4>💳 Payment Alerts</h4>
+              <p>Notify when payments are received or overdue</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="n-payment" checked /><span class="slider"></span></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🖥️ In-App Notifications</div>
+          <div class="card-sub">Control alerts inside the dashboard</div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <h4>🔔 Browser Notifications</h4>
+              <p>Show desktop pop-ups for important events</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="n-browser" /><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <h4>🔊 Sound Alerts</h4>
+              <p>Play a sound when new orders arrive</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="n-sound" /><span class="slider"></span></label>
+          </div>
+          <div class="section-save">
+            <button class="btn-section-save" onclick="saveNotifications()">💾 Save Notifications</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- APPEARANCE -->
+      <div id="tab-appearance" class="section">
+        <div class="card">
+          <div class="card-title">🎨 Theme</div>
+          <div class="card-sub">Choose your preferred dashboard theme</div>
+          <div class="theme-options">
+            <div class="theme-card selected" data-theme="dark" onclick="selectTheme(this,'dark')">
+              <div class="theme-preview theme-dark"></div>
+              <div class="theme-name">Dark</div>
+              <div class="theme-check">✓ Selected</div>
+            </div>
+            <div class="theme-card" data-theme="light" onclick="selectTheme(this,'light')">
+              <div class="theme-preview theme-light"></div>
+              <div class="theme-name">Light</div>
+              <div class="theme-check">✓ Selected</div>
+            </div>
+            <div class="theme-card" data-theme="blue" onclick="selectTheme(this,'blue')">
+              <div class="theme-preview theme-blue"></div>
+              <div class="theme-name">Ocean Blue</div>
+              <div class="theme-check">✓ Selected</div>
+            </div>
+          </div>
+
+          <div class="card-title" style="margin-top:8px">🎨 Accent Color</div>
+          <div style="font-size:13px;color:#64748b;margin:6px 0 12px">Pick a primary accent color for buttons and highlights</div>
+          <div class="accent-options">
+            <div class="accent-dot selected" style="background:#3b82f6" data-color="#3b82f6" onclick="selectAccent(this,'#3b82f6')" title="Blue"></div>
+            <div class="accent-dot" style="background:#22c55e" data-color="#22c55e" onclick="selectAccent(this,'#22c55e')" title="Green"></div>
+            <div class="accent-dot" style="background:#8b5cf6" data-color="#8b5cf6" onclick="selectAccent(this,'#8b5cf6')" title="Purple"></div>
+            <div class="accent-dot" style="background:#f59e0b" data-color="#f59e0b" onclick="selectAccent(this,'#f59e0b')" title="Amber"></div>
+            <div class="accent-dot" style="background:#ef4444" data-color="#ef4444" onclick="selectAccent(this,'#ef4444')" title="Red"></div>
+            <div class="accent-dot" style="background:#06b6d4" data-color="#06b6d4" onclick="selectAccent(this,'#06b6d4')" title="Cyan"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔤 Display Preferences</div>
+          <div class="card-sub">Adjust how information is displayed</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date Format</label>
+              <select id="a-date">
+                <option>DD/MM/YYYY</option>
+                <option>MM/DD/YYYY</option>
+                <option>YYYY-MM-DD</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <select id="a-currency">
+                <option>₹ INR</option>
+                <option>$ USD</option>
+                <option>€ EUR</option>
+                <option>£ GBP</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Language</label>
+              <select id="a-lang">
+                <option>English</option>
+                <option>Hindi</option>
+                <option>Spanish</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Items Per Page</label>
+              <select id="a-perpage">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+              </select>
+            </div>
+          </div>
+          <div class="section-save">
+            <button class="btn-section-save" onclick="saveAppearance()">💾 Save Appearance</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMAIL -->
+      <div id="tab-email" class="section">
+        <div class="card">
+          <div class="card-title">📧 Email Configuration</div>
+          <div class="card-sub">Configure the Gmail account used to send automated emails</div>
+
+          <div class="email-status not-configured" id="email-status-badge">
+            ⚠️ Not Configured
+          </div>
+
+          <div class="form-row single">
+            <div class="form-group">
+              <label>Sender Gmail Address</label>
+              <input type="email" id="e-gmail" placeholder="yourgmail@gmail.com" oninput="checkEmailStatus()" />
+            </div>
+          </div>
+          <div class="form-row single">
+            <div class="form-group">
+              <label>Gmail App Password</label>
+              <input type="password" id="e-apppass" placeholder="16-character app password" oninput="checkEmailStatus()" />
+            </div>
+          </div>
+          <div class="form-row single">
+            <div class="form-group">
+              <label>Admin / Owner Email (receives all alerts)</label>
+              <input type="email" id="e-admin" placeholder="owner@email.com" />
+            </div>
+          </div>
+
+          <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:16px;margin-top:4px">
+            <div style="font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:8px">📋 How to get Gmail App Password:</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.8">
+              1. Go to <strong style="color:#e5e7eb">myaccount.google.com</strong><br>
+              2. Security → Enable <strong style="color:#e5e7eb">2-Step Verification</strong><br>
+              3. Search <strong style="color:#e5e7eb">"App Passwords"</strong><br>
+              4. Select "Mail" → Generate → Copy the 16-char password
+            </div>
+          </div>
+
+          <button class="btn-test-email" onclick="testEmail()">📨 Send Test Email</button>
+
+          <div class="section-save" style="margin-top:16px">
+            <button class="btn-section-save" onclick="saveEmail()">💾 Save Email Config</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SYSTEM -->
+      <div id="tab-system" class="section">
+        <div class="card">
+          <div class="card-title">🖥️ System Information</div>
+          <div class="card-sub">Current platform and backend status</div>
+
+          <div class="quick-stats">
+            <div class="qs">
+              <div class="qs-val" id="sys-products" style="color:#3b82f6">—</div>
+              <div class="qs-label">Total Products</div>
+            </div>
+            <div class="qs">
+              <div class="qs-val" id="sys-orders" style="color:#22c55e">—</div>
+              <div class="qs-label">Total Orders</div>
+            </div>
+            <div class="qs">
+              <div class="qs-val" id="sys-customers" style="color:#a78bfa">—</div>
+              <div class="qs-label">Total Customers</div>
+            </div>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">App Name</div>
+              <div class="info-value">Smart Retail Analytics</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Version</div>
+              <div class="info-value blue">v2.0.0</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Backend</div>
+              <div class="info-value" id="sys-backend">Checking...</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Database</div>
+              <div class="info-value" id="sys-db">Checking...</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Backend URL</div>
+              <div class="info-value blue">localhost:3000</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Last Login</div>
+              <div class="info-value" id="sys-login">—</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Logged In As</div>
+              <div class="info-value green" id="sys-owner">—</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Node Environment</div>
+              <div class="info-value">Production</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔧 System Actions</div>
+          <div class="card-sub">Maintenance and diagnostic tools</div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <h4>🔄 Auto Refresh Dashboard</h4>
+              <p>Refresh dashboard data every 5 minutes automatically</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-autorefresh" /><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <h4>📋 Activity Logging</h4>
+              <p>Log all user actions for audit trail</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-logging" checked /><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <h4>🐛 Debug Mode</h4>
+              <p>Show detailed error messages in console</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-debug" /><span class="slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- DANGER ZONE -->
+      <div id="tab-danger" class="section">
+        <div class="danger-card">
+          <div class="danger-title">⚠️ Danger Zone</div>
+          <div class="danger-sub">These actions are irreversible. Please be absolutely sure before proceeding.</div>
+
+          <div class="danger-row">
+            <div class="danger-row-info">
+              <h4>🗑️ Clear All Orders</h4>
+              <p>Permanently delete all orders from the database</p>
+            </div>
+            <button class="btn-danger" onclick="dangerAction('orders')">Clear Orders</button>
+          </div>
+          <div class="danger-row">
+            <div class="danger-row-info">
+              <h4>👥 Clear All Customers</h4>
+              <p>Permanently remove all customer records</p>
+            </div>
+            <button class="btn-danger" onclick="dangerAction('customers')">Clear Customers</button>
+          </div>
+          <div class="danger-row">
+            <div class="danger-row-info">
+              <h4>🔄 Reset All Settings</h4>
+              <p>Restore all settings to factory defaults</p>
+            </div>
+            <button class="btn-danger" onclick="resetSettings()">Reset Settings</button>
+          </div>
+          <div class="danger-row">
+            <div class="danger-row-info">
+              <h4>🚪 Logout All Sessions</h4>
+              <p>Sign out from all active sessions immediately</p>
+            </div>
+            <button class="btn-danger" onclick="logoutAll()">Logout All</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

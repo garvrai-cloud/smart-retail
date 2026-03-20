@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Orders - Smart Retail</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="orders.css" />
+</head>
+<body>
+  <script src="orders.js"></script>
+
+  <div class="sidebar">
+    <div class="sidebar-header"><h2>Smart Retail</h2></div>
+    <nav class="nav-menu">
+      <a href="dashboard_dynamic.html" class="nav-item"><span>📊</span><span>Dashboard</span></a>
+      <a href="products.html"          class="nav-item"><span>📦</span><span>Products</span></a>
+      <a href="orders.html"            class="nav-item active"><span>🛒</span><span>Orders</span></a>
+      <a href="customers.html"         class="nav-item"><span>👥</span><span>Customers</span></a>
+      <a href="automation.html"        class="nav-item"><span>🤖</span><span>Automation</span></a>
+      <a href="dashboard_analytics.html" class="nav-item"><span>📈</span><span>Analytics</span></a>
+      <a href="settings.html"          class="nav-item"><span>⚙️</span><span>Settings</span></a>
+      <a href="index.html"             class="nav-item"><span>🚪</span><span>Logout</span></a>
+    </nav>
+  </div>
+
+  <div class="main-content">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <h1>🛒 Orders Management</h1>
+        <p id="order-count">Loading orders...</p>
+      </div>
+      <div id="connection-status" class="connection-status status-disconnected">
+        <span class="status-dot" style="background:#ef4444"></span>
+        <span>Connecting...</span>
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value c-blue" id="stat-total">—</div>
+        <div class="stat-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Completed</div>
+        <div class="stat-value c-green" id="stat-completed">—</div>
+        <div class="stat-sub">Successfully delivered</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value c-yellow" id="stat-pending">—</div>
+        <div class="stat-sub">Awaiting action</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value c-green" id="stat-revenue">—</div>
+        <div class="stat-sub">Completed orders only</div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search by customer, order ID, email..." oninput="applyFilters()" />
+      </div>
+      <select class="filter-select" id="status-filter" onchange="applyFilters()">
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="processing">Processing</option>
+        <option value="shipped">Shipped</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <select class="filter-select" id="payment-filter" onchange="applyFilters()">
+        <option value="">All Payments</option>
+        <option value="paid">Paid</option>
+        <option value="unpaid">Unpaid</option>
+      </select>
+      <select class="filter-select" id="sort-select" onchange="applyFilters()">
+        <option value="id_asc">Order ID (1→9)</option>
+        <option value="date_desc">Newest First</option>
+        <option value="date_asc">Oldest First</option>
+        <option value="amount_desc">Highest Amount</option>
+        <option value="amount_asc">Lowest Amount</option>
+      </select>
+      <button class="btn-refresh" onclick="loadOrders()">🔄 Refresh</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div class="table-header-row">
+        <span class="table-title">📋 All Orders</span>
+        <span class="order-count" id="showing-count"></span>
+      </div>
+      <div id="orders-table-body">
+        <div class="empty-state">
+          <div class="icon">⏳</div>
+          <p>Loading orders from database...</p>
+        </div>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+  </div>
+
+  <!-- STATUS UPDATE MODAL -->
+  <div id="statusModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-title">✏️ Update Order Status</div>
+      <div class="modal-sub" id="modal-order-label">Order #—</div>
+      <div class="status-options">
+        <div class="status-option" onclick="selectStatus('pending')">⏳ Pending</div>
+        <div class="status-option" onclick="selectStatus('processing')">⚙️ Processing</div>
+        <div class="status-option" onclick="selectStatus('shipped')">🚚 Shipped</div>
+        <div class="status-option" onclick="selectStatus('completed')">✅ Completed</div>
+        <div class="status-option" onclick="selectStatus('cancelled')">❌ Cancelled</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel-modal" onclick="closeStatusModal()">Cancel</button>
+        <button class="btn-save-modal" onclick="saveStatus()">Save Status</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000';
+    function getCurrencySymbol() {
+      if (!localStorage.getItem('currency_symbol')) {
+        localStorage.setItem('currency_symbol', '₹');
+        localStorage.setItem('currency_rate', '1');
+      }
+      // Fix wrong rate if it was previously set to 1 for INR
+      const sym = localStorage.getItem('currency_symbol') || '₹';
+      const rate = parseFloat(localStorage.getItem('currency_rate') || '1');
+      if (sym === '₹' && rate < 1) {
+        localStorage.setItem('currency_rate', '1');
+      }
+      return sym;
+    }
+    function getCurrencyRate() {
+      return parseFloat(localStorage.getItem('currency_rate') || '1');
+    }
+    function formatCurrency(amount) {
+      const sym  = getCurrencySymbol();
+      const rate = getCurrencyRate();
+      const val  = parseFloat(String(amount).replace(/[^0-9.]/g,'')) || 0;
+      const converted = val * rate;
+      return sym + converted.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+    }
+    let allOrders = [];
+    let filteredOrders = [];
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
+    let editingOrderId = null;
+    let selectedStatus = null;
+
+    // ── Connection status ──────────────────────────────
+    function setConnected(ok) {
+      const el = document.getElementById('connection-status');
+      const dot = el.querySelector('.status-dot');
+      const txt = el.querySelector('span:last-child');
+      el.className = 'connection-status ' + (ok ? 'status-connected' : 'status-disconnected');
+      dot.style.background = ok ? '#22c55e' : '#ef4444';
+      txt.textContent = ok ? 'Connected' : 'Disconnected';
+    }
+
+    // ── Load orders ────────────────────────────────────
+    async function loadOrders() {
+      try {
+        const res = await fetch(`${API_URL}/api/orders`);
+        if (!res.ok) throw new Error('Failed');
+        allOrders = await res.json();
+        setConnected(true);
+        updateStats();
+        applyFilters();
+        document.getElementById('order-count').textContent =
+          `${allOrders.length} total orders`;
+      } catch (e) {
+        setConnected(false);
+        document.getElementById('order-count').textContent = 'Unable to load orders';
+        document.getElementById('orders-table-body').innerHTML = `
+          <div class="no-backend">
+            <div class="icon">🔌</div>
+            <h3>Backend not connected</h3>
+            <p>Make sure the backend is running:</p>
+            <code>npm start</code>
+            <button class="btn-refresh" style="margin-top:16px" onclick="loadOrders()">🔄 Retry</button>
+          </div>`;
+      }
+    }
+
+    // ── Stats ──────────────────────────────────────────
+    function updateStats() {
+      const total     = allOrders.length;
+      const completed = allOrders.filter(o => o.status === 'completed').length;
+      const pending   = allOrders.filter(o => o.status === 'pending').length;
+      const revenue   = allOrders
+        .filter(o => o.status === 'completed')
+        .reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+
+      document.getElementById('stat-total').textContent     = total;
+      document.getElementById('stat-completed').textContent = completed;
+      document.getElementById('stat-pending').textContent   = pending;
+      document.getElementById('stat-revenue').textContent   = formatCurrency(revenue);
+    }
+
+    // ── Filters + sort ─────────────────────────────────
+    function applyFilters() {
+      const q       = document.getElementById('search-input').value.toLowerCase();
+      const status  = document.getElementById('status-filter').value;
+      const payment = document.getElementById('payment-filter').value;
+      const sort    = document.getElementById('sort-select').value;
+
+      filteredOrders = allOrders.filter(o => {
+        const matchQ = !q || 
+          (o.customer_name  || '').toLowerCase().includes(q) ||
+          (o.customer_email || '').toLowerCase().includes(q) ||
+          String(o.order_id).includes(q);
+        const matchStatus  = !status  || o.status === status;
+        const matchPayment = !payment || (o.payment_status || '').toLowerCase() === payment;
+        return matchQ && matchStatus && matchPayment;
+      });
+
+      filteredOrders.sort((a, b) => {
+        if (sort === 'id_asc')      return a.order_id - b.order_id;
+        if (sort === 'date_desc')   return new Date(b.order_date) - new Date(a.order_date);
+        if (sort === 'date_asc')    return new Date(a.order_date) - new Date(b.order_date);
+        if (sort === 'amount_desc') return parseFloat(b.total_amount) - parseFloat(a.total_amount);
+        if (sort === 'amount_asc')  return parseFloat(a.total_amount) - parseFloat(b.total_amount);
+        return a.order_id - b.order_id;
+      });
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    // ── Render table ───────────────────────────────────
+    function statusBadge(s) {
+      const map = {
+        pending:    'badge-pending',
+        processing: 'badge-processing',
+        shipped:    'badge-shipped',
+        completed:  'badge-completed',
+        cancelled:  'badge-cancelled',
+      };
+      const icons = { pending:'⏳', processing:'⚙️', shipped:'🚚', completed:'✅', cancelled:'❌' };
+      const cls = map[s] || 'badge-pending';
+      return `<span class="badge ${cls}">${icons[s]||''} ${s||'—'}</span>`;
+    }
+
+    function paymentBadge(p) {
+      const cls = p === 'paid' ? 'badge-paid' : 'badge-unpaid';
+      return `<span class="badge ${cls}">${p === 'paid' ? '💳 Paid' : '⚠️ Unpaid'}</span>`;
+    }
+
+    function formatDate(d) {
+      if (!d) return '—';
+      const dt = new Date(d);
+      return dt.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) +
+             ' ' + dt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+    }
+
+    function renderTable() {
+      const body = document.getElementById('orders-table-body');
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const page  = filteredOrders.slice(start, start + PAGE_SIZE);
+
+      document.getElementById('showing-count').textContent =
+        filteredOrders.length
+          ? `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, filteredOrders.length)} of ${filteredOrders.length}`
+          : '';
+
+      if (filteredOrders.length === 0) {
+        body.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🔍</div>
+            <p>No orders match your filters</p>
+          </div>`;
+        return;
+      }
+
+      body.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Payment</th>
+              <th>Method</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${page.map(o => `
+              <tr>
+                <td><span class="order-id">#${o.order_id}</span></td>
+                <td>
+                  <div class="customer-name">${o.customer_name || '—'}</div>
+                  <div class="customer-email">${o.customer_email || ''}</div>
+                </td>
+                <td><span class="order-amount">${formatCurrency(parseFloat(o.total_amount || 0).toFixed(2))}</span></td>
+                <td>${statusBadge(o.status)}</td>
+                <td>${paymentBadge(o.payment_status)}</td>
+                <td><span class="payment-method">${o.payment_method || '—'}</span></td>
+                <td><span class="order-date">${formatDate(o.order_date)}</span></td>
+                <td>
+                  <button class="btn-status" onclick="openStatusModal(${o.order_id}, '${o.status}')">
+                    ✏️ Status
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    // ── Pagination ─────────────────────────────────────
+    function renderPagination() {
+      const totalPages = Math.ceil(filteredOrders.length / PAGE_SIZE);
+      const pg = document.getElementById('pagination');
+      if (totalPages <= 1) { pg.innerHTML = ''; return; }
+
+      let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>← Prev</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      }
+      html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>Next →</button>`;
+      pg.innerHTML = html;
+    }
+
+    function goPage(n) {
+      const total = Math.ceil(filteredOrders.length / PAGE_SIZE);
+      if (n < 1 || n > total) return;
+      currentPage = n;
+      renderTable();
+      renderPagination();
+    }
+
+    // ── Status modal ───────────────────────────────────
+    function openStatusModal(id, currentStatus) {
+      editingOrderId = id;
+      selectedStatus = currentStatus;
+      document.getElementById('modal-order-label').textContent = `Order #${id} — current: ${currentStatus}`;
+      document.querySelectorAll('.status-option').forEach(el => {
+        el.classList.toggle('selected', el.textContent.toLowerCase().includes(currentStatus));
+      });
+      document.getElementById('statusModal').classList.add('active');
+    }
+
+    function closeStatusModal() {
+      document.getElementById('statusModal').classList.remove('active');
+      editingOrderId = null; selectedStatus = null;
+    }
+
+    function selectStatus(s) {
+      selectedStatus = s;
+      document.querySelectorAll('.status-option').forEach(el => {
+        el.classList.toggle('selected', el.textContent.toLowerCase().includes(s));
+      });
+    }
+
+    async function saveStatus() {
+      if (!editingOrderId || !selectedStatus) return;
+      try {
+        const res = await fetch(`${API_URL}/api/orders/${editingOrderId}/status`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ status: selectedStatus })
+        });
+        if (res.ok) {
+          closeStatusModal();
+          showToast(`✅ Order #${editingOrderId} → ${selectedStatus}`);
+          loadOrders();
+        } else {
+          const err = await res.json();
+          alert('❌ Error: ' + (err.error || 'Unknown'));
+        }
+      } catch (e) {
+        alert('❌ Backend not reachable: ' + e.message);
+      }
+    }
+
+    // ── Toast ──────────────────────────────────────────
+    function showToast(msg) {
+      let t = document.getElementById('toast');
+      if (!t) {
+        t = document.createElement('div'); t.id = 'toast';
+        t.style.cssText = `position:fixed;bottom:28px;right:28px;z-index:9999;
+          background:rgba(15,23,42,0.97);border:1px solid #22c55e;color:#e5e7eb;
+          padding:14px 22px;border-radius:12px;font-size:14px;font-weight:600;
+          box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:slideUp 0.3s ease;display:none;`;
+        document.body.appendChild(t);
+      }
+      t.textContent = msg; t.style.display = 'block';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    // Close modal on outside click
+    document.getElementById('statusModal').addEventListener('click', function(e) {
+      if (e.target === this) closeStatusModal();
+    });
+
+    // Init
+    loadOrders();
+  </script>
+</body>
+</html>

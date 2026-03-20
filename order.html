@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Place Order | Smart Retail</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="order.css" />
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+<div id="cursor"></div>
+
+<!-- HEADER - same as index.html -->
+<header>
+  <h1>Smart Retail</h1>
+</header>
+
+<!-- STATUS BAR -->
+<div class="status-bar" id="status-bar">
+  ⏳ Connecting to backend...
+</div>
+
+<!-- HERO MINI -->
+<div class="hero-mini">
+  <h2>🛒 Place Your Order</h2>
+  <p>Browse products, add to cart and checkout in seconds.</p>
+</div>
+
+<!-- MAIN CONTAINER -->
+<div class="container">
+
+  <!-- LEFT: Products -->
+  <div>
+    <div class="card">
+      <h3>📦 Choose Products</h3>
+      <div class="products-grid" id="products-grid">
+        <div class="loading">⏳ Loading products from database...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Cart + Form -->
+  <div class="cart-section">
+
+    <!-- Cart -->
+    <div class="card">
+      <h3>🛒 Your Cart</h3>
+      <div id="cart-items">
+        <div class="cart-empty">No items yet 🛍️<br>Click a product to add!</div>
+      </div>
+      <div class="cart-total">
+        <span>Total</span>
+        <span class="total-amount" id="cart-total">$0.00</span>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="card">
+      <h3>📋 Your Details</h3>
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input type="text" id="customer-name" class="form-input" placeholder="John Doe" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" id="customer-email" class="form-input" placeholder="john@email.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone *</label>
+        <div class="phone-input-container">
+          <!-- Custom Country Flag Selector -->
+          <div class="country-selector" id="country-selector">
+            <div class="country-selected" id="country-selected" onclick="toggleCountryDropdown()">
+              <span class="country-flag" id="selected-flag">🇮🇳</span>
+              <span class="country-dial" id="selected-dial">+91</span>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="country-dropdown" id="country-dropdown">
+              <div class="country-search-wrap">
+                <input type="text" class="country-search" id="country-search" placeholder="🔍 Search country..." oninput="filterCountries(this.value)" />
+              </div>
+              <div class="country-list" id="country-list"></div>
+            </div>
+          </div>
+          <!-- Hidden input to store selected dial code -->
+          <input type="hidden" id="country-code" value="+91" />
+          <input type="tel" id="customer-phone" class="phone-number-input" placeholder="9876543210" maxlength="15" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select id="payment-method" class="form-input">
+          <option value="Credit Card">💳 Credit Card</option>
+          <option value="Debit Card">🏧 Debit Card</option>
+          <option value="UPI">📱 UPI</option>
+          <option value="Cash on Delivery">💵 Cash on Delivery</option>
+        </select>
+      </div>
+      <button class="place-order-btn" id="place-order-btn" onclick="placeOrder()">
+        ✅ Place Order
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<footer>© 2026 Smart Retail Analytics Mini Project</footer>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-box">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Order Placed!</div>
+    <div class="success-msg">Your order has been successfully saved to the database!</div>
+    <div class="success-order-id" id="success-order-id"></div>
+    <button class="continue-btn" onclick="resetOrder()">Place Another Order</button>
+  </div>
+</div>
+
+  <script src="order.js"></script>
+
+</body>
+</html>
